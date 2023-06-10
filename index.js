@@ -85,7 +85,7 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result);
 
-    })
+    });
 
 
     app.post('/users', async (req, res) => {
@@ -99,6 +99,24 @@ async function run() {
       res.send(result);
     });
 
+    // User Admin
+    app.get('/users', verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get('/users/admin/:email', verifyJwt, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        return res.send({ admin: false })
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === 'admin' };
+      res.send(result);
+    })
 
     // Classes API
     app.get('/classes', async (req, res) => {
@@ -164,12 +182,11 @@ async function run() {
 
 
     //Payments Api
-
     app.get('/payments', verifyJwt, async (req, res) => {
 
       const email = req.query.email;
       const query = { email: email };
-      const result = await paymentCollection.find(query).sort({date:-1}).toArray();
+      const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
       res.send(result);
 
     })
