@@ -50,8 +50,11 @@ async function run() {
     // Collections
     const classesCollection = client.db('reelCamp').collection('classes');
     const usersCollection = client.db('reelCamp').collection('users');
+    const selectClassesCollection = client.db('reelCamp').collection('selectClasses');
 
-    // Warning : use verifyJwt before using verifyAdmin
+
+
+    //verifyAdmin
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
@@ -89,8 +92,43 @@ async function run() {
       const result = await classesCollection.find().toArray();
       res.send(result)
 
-    })
+    });
 
+
+
+
+
+    // Select Classes API
+    
+    app.get('/selectClasses', verifyJwt, async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(401).send({ error: true, message: 'forbidden access' })
+      }
+      const query = { email: email }
+      const result = await selectClassesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post('/selectClasses', async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await selectClassesCollection.insertOne(item);
+      res.send(result);
+    });
+
+    app.delete('/selectClasses/:id', async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = { _id: new ObjectId(id) }
+      const result = await selectClassesCollection.deleteOne(query);
+      res.send(result);
+    });
 
 
 
