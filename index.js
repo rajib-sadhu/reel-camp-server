@@ -164,6 +164,16 @@ async function run() {
 
 
     //Payments Api
+
+    app.get('/payments', verifyJwt, async (req, res) => {
+
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).sort({date:-1}).toArray();
+      res.send(result);
+
+    })
+
     app.post('/payments/:id', verifyJwt, async (req, res) => {
 
       const id = req.params.id;
@@ -171,7 +181,7 @@ async function run() {
       const payment = req.body;
 
       const insertResult = paymentCollection.insertOne(payment);
-      const query = { _id: new ObjectId(id)  };
+      const query = { _id: new ObjectId(id) };
 
       const deleteResult = await selectClassesCollection.deleteOne(query);
 
