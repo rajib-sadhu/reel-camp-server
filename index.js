@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const app = express();
 const cors = require('cors')
@@ -74,6 +74,18 @@ async function run() {
     })
 
     // Users API
+
+    app.get('/user/info', verifyJwt, async (req, res) => {
+
+      const email = req.query.email;
+
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+
+    })
+
+
     app.post('/users', async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -99,7 +111,7 @@ async function run() {
 
 
     // Select Classes API
-    
+
     app.get('/selectClasses', verifyJwt, async (req, res) => {
       const email = req.query.email;
       if (!email) {
@@ -124,7 +136,7 @@ async function run() {
 
     app.delete('/selectClasses/:id', async (req, res) => {
       const id = req.params.id;
-      // console.log(id);
+      console.log(id);
       const query = { _id: new ObjectId(id) }
       const result = await selectClassesCollection.deleteOne(query);
       res.send(result);
