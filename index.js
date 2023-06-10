@@ -6,6 +6,7 @@ const cors = require('cors')
 const port = process.env.PORT || 5000;
 const jwt = require('jsonwebtoken');
 
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 
 // middleware
 app.use(cors());
@@ -51,6 +52,7 @@ async function run() {
     const classesCollection = client.db('reelCamp').collection('classes');
     const usersCollection = client.db('reelCamp').collection('users');
     const selectClassesCollection = client.db('reelCamp').collection('selectClasses');
+    const paymentCollection = client.db('reelCamp').collection('payment');
 
 
 
@@ -140,6 +142,43 @@ async function run() {
       const query = { _id: new ObjectId(id) }
       const result = await selectClassesCollection.deleteOne(query);
       res.send(result);
+    });
+
+
+
+
+    // create payment intent
+    app.post('/create-payment-intent', verifyJwt, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+      // console.log(price, amount)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'inr',
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+
+
+    //Payments Api
+    app.post('/payments/:id', verifyJwt, async (req, res) => {
+
+      const id = req.params.id;
+
+      const payment = req.body;
+
+      const insertResult = paymentCollection.insertOne(payment);
+      const query = { _id: new ObjectId(id)  };
+
+      const deleteResult = await selectClassesCollection.deleteOne(query);
+
+      res.send({
+        insertResult,
+        deleteResult
+      });
     });
 
 
