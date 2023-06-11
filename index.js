@@ -66,7 +66,18 @@ async function run() {
         return res.status(403).send({ error: true, message: 'forbidden access' })
       }
       next();
-    }
+    };
+
+    // Verify Instructor
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== 'instructor') {
+        return res.status(403).send({ error: true, message: 'forbidden access' })
+      }
+      next();
+    };
 
     // Check JWT
     app.post('/jwt', (req, res) => {
@@ -161,6 +172,15 @@ async function run() {
 
     });
 
+    // Instructor
+    app.get('/classes/instructor', async (req, res) => {
+      const email = req.query.email;
+      console.log(email)
+      const filter = { instructorEmail: email };
+      console.log(filter)
+      const result = await classesCollection.find(filter).toArray();
+      res.send(result)
+    });
 
 
 
