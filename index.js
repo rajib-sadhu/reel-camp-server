@@ -149,8 +149,14 @@ async function run() {
 
     // Classes API
     app.get('/classes', async (req, res) => {
+      const filter = { instructorStatus: 'active' };
+      const result = await classesCollection.find(filter).toArray();
+      res.send(result)
+    });
 
-      const result = await classesCollection.find().toArray();
+    app.post('/classes', verifyJwt, async (req, res) => {
+      const newItem = req.body;
+      const result = await classesCollection.insertOne(newItem);
       res.send(result)
 
     });
