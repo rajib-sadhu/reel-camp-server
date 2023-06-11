@@ -105,18 +105,47 @@ async function run() {
       res.send(result);
     });
 
+    app.delete('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log('delete users', id)
+      const query = { _id: new ObjectId(id) }
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
     app.get('/users/admin/:email', verifyJwt, async (req, res) => {
       const email = req.params.email;
-
       if (req.decoded.email !== email) {
         return res.send({ admin: false })
       }
-
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { admin: user?.role === 'admin' };
       res.send(result);
     })
+
+    app.patch('/users/admin/:id', async (req, res) => {
+
+      const id = req.params.id;
+      const userRole = req.query.role;
+
+      console.log('ID:', id);
+      console.log('User Role:', userRole);
+
+      const filter = { _id: new ObjectId(id) };
+      const updateRole = {
+        $set: {
+          role: userRole
+        }
+      }
+      const result = await usersCollection.updateOne(filter, updateRole);
+      res.send(result)
+    });
+
+
+
+
 
     // Classes API
     app.get('/classes', async (req, res) => {
