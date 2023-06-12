@@ -232,7 +232,6 @@ async function run() {
 
 
     // Select Classes API
-
     app.get('/selectClasses', verifyJwt, async (req, res) => {
       const email = req.query.email;
       if (!email) {
@@ -295,17 +294,44 @@ async function run() {
     app.post('/payments/:id', verifyJwt, async (req, res) => {
 
       const id = req.params.id;
-
       const payment = req.body;
+      const classId = req.query.classId;
 
-      const insertResult = paymentCollection.insertOne(payment);
-      const query = { _id: new ObjectId(id) };
+      const backendHit = { classId: classId, cartId: id, paymentData: payment }
 
-      const deleteResult = await selectClassesCollection.deleteOne(query);
+      // console.log(backendHit)
+
+      const queryDelete = { _id: new ObjectId(id) };
+      const queryClassId = { _id: new ObjectId(classId) };
+      const getClass = await classesCollection.findOne(queryClassId);
+      const availableSeats = getClass.availableSeats;
+      const enrolled = getClass.enrolled;
+      
+      let setEnroll = '';
+      if (!enrolled) {
+        setEnroll = 1;
+      }
+      else {
+        setEnroll = enrolled + 1;
+      }
+      
+      const updateClass = {
+        $set: {
+          availableSeats: availableSeats - 1,
+          enrolled: setEnroll
+        }
+      };
+      
+
+      const updateClassResult = await classesCollection.updateOne(queryClassId,updateClass);
+      
+      const insertResult = await paymentCollection.insertOne(payment);
+      const deleteResult = await selectClassesCollection.deleteOne(queryDelete);
 
       res.send({
         insertResult,
-        deleteResult
+        deleteResult,
+        updateClassResult
       });
     });
 
