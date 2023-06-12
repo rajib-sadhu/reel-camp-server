@@ -158,6 +158,14 @@ async function run() {
 
 
     // Instructor API
+
+    app.get('/instructor', async (req, res) => {
+      const project = { projection: {name:1,email:1,photoURL:1} }
+      const result = await usersCollection.find({role:'instructor'},project).toArray();
+      res.send(result);
+
+    })
+
     app.get('/users/instructor/:email', verifyJwt, async (req, res) => {
       const email = req.params.email;
       // console.log(email)
@@ -170,13 +178,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/instructor/myClass', verifyJwt, verifyInstructor, async(req,res)=>{
+    app.get('/instructor/myClass', verifyJwt, verifyInstructor, async (req, res) => {
 
       const email = req.query.email;
-      const filter ={instructorEmail:email};
+      const filter = { instructorEmail: email };
       const result = await classesCollection.find(filter).toArray();
       res.send(result);
-
     })
 
 
