@@ -157,6 +157,29 @@ async function run() {
 
 
 
+    // Instructor API
+    app.get('/users/instructor/:email', verifyJwt, async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      if (req.decoded.email !== email) {
+        return res.send({ instructor: false })
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === 'instructor' };
+      res.send(result);
+    });
+
+    app.get('/instructor/myClass', verifyJwt, verifyInstructor, async(req,res)=>{
+
+      const email = req.query.email;
+      const filter ={instructorEmail:email};
+      const result = await classesCollection.find(filter).toArray();
+      res.send(result);
+
+    })
+
+
 
     // Classes API
     app.get('/classes', async (req, res) => {
@@ -172,15 +195,6 @@ async function run() {
 
     });
 
-    // Instructor
-    app.get('/classes/instructor', async (req, res) => {
-      const email = req.query.email;
-      console.log(email)
-      const filter = { instructorEmail: email };
-      console.log(filter)
-      const result = await classesCollection.find(filter).toArray();
-      res.send(result)
-    });
 
 
 
