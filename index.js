@@ -136,14 +136,9 @@ async function run() {
       res.send(result);
     })
 
-    app.patch('/users/admin/:id', async (req, res) => {
-
+    app.patch('/users/admin/:id', verifyJwt, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const userRole = req.query.role;
-
-      console.log('ID:', id);
-      console.log('User Role:', userRole);
-
       const filter = { _id: new ObjectId(id) };
       const updateRole = {
         $set: {
@@ -151,17 +146,44 @@ async function run() {
         }
       }
       const result = await usersCollection.updateOne(filter, updateRole);
-      res.send(result)
+      res.send(result);
+    });
+
+    app.patch('/classes/admin/status/:id', verifyJwt, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const status = req.query.status;
+      // console.log(id, status)
+      const filter = { _id: new ObjectId(id) };
+      const updateStatus = {
+        $set: {
+          instructorStatus: status
+        }
+      }
+      const result = await classesCollection.updateOne(filter, updateStatus);
+      res.send(result);
+    });
+
+    app.patch('/classes/admin/feedback/:id', async (req, res) => {
+      const id = req.params.id;
+      const { feedback } = req.body;
+      // console.log(id, feedback);
+      const filter = { _id: new ObjectId(id) };
+      const updateFeedback = {
+        $set: {
+          adminFeedback: feedback
+        }
+      }
+      const result = await classesCollection.updateOne(filter, updateFeedback);
+      res.send(result);
     });
 
 
 
 
     // Instructor API
-
     app.get('/instructor', async (req, res) => {
-      const project = { projection: {name:1,email:1,photoURL:1} }
-      const result = await usersCollection.find({role:'instructor'},project).toArray();
+      const project = { projection: { name: 1, email: 1, photoURL: 1 } }
+      const result = await usersCollection.find({ role: 'instructor' }, project).toArray();
       res.send(result);
 
     })
@@ -195,13 +217,16 @@ async function run() {
       res.send(result)
     });
 
-    app.post('/classes', verifyJwt, async (req, res) => {
+    app.post('/classes', verifyJwt, verifyInstructor, async (req, res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
       res.send(result)
-
     });
 
+    app.get('/classes/check', verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result)
+    })
 
 
 
